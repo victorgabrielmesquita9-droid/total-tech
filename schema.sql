@@ -6,8 +6,14 @@ create table if not exists articles (
   title text not null,
   category text not null default 'geral',
   content text not null,
+  slug text,
+  image_url text,
   created_at timestamptz not null default now()
 );
+
+create unique index if not exists articles_slug_unique
+  on articles (slug)
+  where slug is not null;
 
 -- Tabela de inscritos (captura de e-mail da página "em breve")
 create table if not exists subscribers (

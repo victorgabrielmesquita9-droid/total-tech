@@ -1,84 +1,121 @@
-'use client';
-
-import { useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
+import { labelDaCategoria } from '@/lib/categorias';
+import { tempoDeLeitura, formatarData } from '@/lib/formato';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import NewsletterForm from '@/components/NewsletterForm';
+import AuroraBackground from '@/components/AuroraBackground';
+import KineticText from '@/components/KineticText';
+import MagneticButton from '@/components/MagneticButton';
+import Reveal from '@/components/Reveal';
 
-export default function Home() {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
-  const [errorMsg, setErrorMsg] = useState('');
+export const dynamic = 'force-dynamic';
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!email.trim()) return;
+function resumo(texto, tamanho = 130) {
+  if (!texto) return '';
+  return texto.length > tamanho ? texto.slice(0, tamanho).trim() + '…' : texto;
+}
 
-    setStatus('loading');
-    const { error } = await supabase.from('subscribers').insert({ email: email.trim() });
-
-    if (error) {
-      // e-mail duplicado ou outro erro do Supabase
-      setStatus('error');
-      setErrorMsg(
-        error.code === '23505'
-          ? 'Esse e-mail já está inscrito.'
-          : 'Não foi possível inscrever agora. Tente novamente.'
-      );
-      return;
-    }
-
-    setStatus('success');
-  }
+export default async function Home() {
+  const { data: artigos } = await supabase
+    .from('articles')
+    .select('*')
+    .not('slug', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(9);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#eef4fb] px-6">
-      <div className="w-full max-w-md text-center">
-        <h1 className="font-display font-black text-4xl mb-4 text-[#14213d]">
-          Em breve!
-        </h1>
-        <p className="text-sm text-[#7b8794] mb-7">
-          Seja o primeiro a saber quando lançarmos.
-        </p>
-
-        {status !== 'success' && (
-          <form onSubmit={handleSubmit} className="relative">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="E-mail"
-              required
-              autoComplete="email"
-              aria-label="Seu e-mail"
-              className="w-full py-3.5 pl-4 pr-12 rounded-[10px] border border-[#e1e7ee] bg-white text-sm text-[#14213d] placeholder-[#9aa4b0] outline-none shadow-sm focus:border-[#b7c3d1] focus-visible:ring-2 focus-visible:ring-[#14213d]"
-            />
-            <button
-              type="submit"
-              disabled={status === 'loading'}
-              aria-label="Enviar"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md text-gray-600 hover:bg-[#f1f4f8] focus-visible:ring-2 focus-visible:ring-[#14213d]"
+    <div className="min-h-screen bg-[#07070a] flex flex-col">
+      {/* HERO — aurora + texto cinético */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 opacity-70">
+          <AuroraBackground />
+        </div>
+        <div className="relative z-10">
+          <Header />
+          <div className="max-w-4xl mx-auto px-6 pt-16 pb-28 text-center">
+            <h1 className="font-display font-semibold text-5xl sm:text-7xl text-[#f4f3ef] leading-[1.05] mb-7">
+              <KineticText text="Tutoriais que resolvem" />
+              <br />
+              <KineticText text="de verdade." startDelay={0.5} />
+            </h1>
+            <p
+              className="text-[#a9abb3] text-lg max-w-lg mx-auto mb-10 opacity-0"
+              style={{ animation: 'kinetic-in 0.9s cubic-bezier(.16,1,.3,1) forwards 1.1s' }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-          </form>
-        )}
+              Programação, informática, Windows e celulares — guias diretos, sem enrolação.
+            </p>
+            <div
+              className="opacity-0"
+              style={{ animation: 'kinetic-in 0.9s cubic-bezier(.16,1,.3,1) forwards 1.3s' }}
+            >
+              <MagneticButton>
+                <Link
+                  href="/tutoriais"
+                  className="inline-block text-sm font-semibold text-[#07070a] bg-[#f4f3ef] rounded-full px-7 py-3.5 hover:bg-white transition-colors"
+                >
+                  Explorar tutoriais →
+                </Link>
+              </MagneticButton>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        {status === 'success' && (
-          <p className="text-sm text-green-600 mt-2">Obrigado por se inscrever!</p>
-        )}
-        {status === 'error' && (
-          <p className="text-sm text-red-500 mt-2">{errorMsg}</p>
-        )}
+      <main className="flex-1 relative z-10">
+        <section className="max-w-5xl mx-auto px-6 pb-24">
+          <Reveal>
+            <h2 className="font-display font-semibold text-2xl text-[#f4f3ef] mb-8">
+              Últimos tutoriais
+            </h2>
+          </Reveal>
 
-        <p className="mt-6 text-[13px] text-[#7b8794]">
-          Você é o dono do site?{' '}
-          <a href="/admin/login" className="font-semibold text-[#14213d] underline">
-            Faça login aqui
-          </a>
-        </p>
-      </div>
-    </main>
+          {!artigos || artigos.length === 0 ? (
+            <p className="text-sm text-[#5c5e66]">
+              Ainda não há tutoriais publicados. Volte em breve.
+            </p>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {artigos.map((artigo, i) => (
+                <Reveal key={artigo.id} delay={(i % 3) * 80}>
+                  <Link
+                    href={`/tutoriais/${artigo.slug}`}
+                    className="group block h-full bg-[#101014] border border-[rgba(255,255,255,0.08)] rounded-2xl p-6 hover:border-[#7c5cff] transition-colors"
+                  >
+                    <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-[#7c5cff] mb-3">
+                      {labelDaCategoria(artigo.category)}
+                    </span>
+                    <h3 className="font-display text-lg text-[#f4f3ef] mb-2 leading-snug group-hover:text-[#22d3ee] transition-colors">
+                      {artigo.title}
+                    </h3>
+                    <p className="text-sm text-[#8d8f97] leading-relaxed mb-4">
+                      {resumo(artigo.content)}
+                    </p>
+                    <p className="text-[12px] text-[#5c5e66]">
+                      {formatarData(artigo.created_at)} · {tempoDeLeitura(artigo.content)}
+                    </p>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="relative border-t border-[rgba(255,255,255,0.08)]">
+          <Reveal className="max-w-2xl mx-auto px-6 py-20 text-center block">
+            <h2 className="font-display font-semibold text-3xl text-[#f4f3ef] mb-3">
+              Novos tutoriais no seu e-mail
+            </h2>
+            <p className="text-sm text-[#8d8f97] mb-8">
+              Sem spam — só um aviso quando publicarmos algo novo.
+            </p>
+            <NewsletterForm />
+          </Reveal>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
   );
 }

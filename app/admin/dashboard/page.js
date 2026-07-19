@@ -3,13 +3,22 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { categorias } from '@/lib/categorias';
+import { gerarSlug } from '@/lib/slugify';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ title: '', category: '', content: '' });
+  const [form, setForm] = useState({
+    title: '',
+    category: categorias[0].slug,
+    content: '',
+    slug: '',
+    image_url: '',
+  });
+  const [slugEditadoManualmente, setSlugEditadoManualmente] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -37,27 +46,42 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
+  function handleTitleChange(value) {
+    setForm((f) => ({
+      ...f,
+      title: value,
+      slug: slugEditadoManualmente ? f.slug : gerarSlug(value),
+    }));
+  }
+
   async function handleCreate(e) {
     e.preventDefault();
-    if (!form.title.trim() || !form.content.trim()) return;
+    if (!form.title.trim() || !form.content.trim() || !form.slug.trim()) return;
 
     setSaving(true);
     setErrorMsg('');
 
     const { error } = await supabase.from('articles').insert({
       title: form.title.trim(),
-      category: form.category.trim() || 'geral',
+      category: form.category,
       content: form.content.trim(),
+      slug: form.slug.trim(),
+      image_url: form.image_url.trim() || null,
     });
 
     setSaving(false);
 
     if (error) {
-      setErrorMsg('Não foi possível publicar. Tente novamente.');
+      setErrorMsg(
+        error.code === '23505'
+          ? 'Já existe um artigo com esse endereço (slug). Mude o título ou o slug.'
+          : 'Não foi possível publicar. Tente novamente.'
+      );
       return;
     }
 
-    setForm({ title: '', category: '', content: '' });
+    setForm({ title: '', category: categorias[0].slug, content: '', slug: '', image_url: '' });
+    setSlugEditadoManualmente(false);
     loadArticles();
   }
 
@@ -103,18 +127,49 @@ export default function AdminDashboard() {
           <input
             type="text"
             value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            onChange={(e) => handleTitleChange(e.target.value)}
             required
             className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
           />
 
           <label className="block text-xs font-medium text-[#4b5563] mb-1">
-            Categoria (ex: programação, windows, celulares)
+            Endereço do artigo (slug)
           </label>
           <input
             type="text"
+            value={form.slug}
+            onChange={(e) => {
+              setSlugEditadoManualmente(true);
+              setForm({ ...form, slug: e.target.value });
+            }}
+            required
+            className="w-full mb-1 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1] font-mono"
+          />
+          <p className="text-xs text-[#9aa4b0] mb-4">
+            /tutoriais/{form.slug || 'exemplo-de-slug'}
+          </p>
+
+          <label className="block text-xs font-medium text-[#4b5563] mb-1">Categoria</label>
+          <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
+            className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1] bg-white"
+          >
+            {categorias.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+
+          <label className="block text-xs font-medium text-[#4b5563] mb-1">
+            Imagem de capa (URL, opcional)
+          </label>
+          <input
+            type="text"
+            value={form.image_url}
+            onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+            placeholder="https://..."
             className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
           />
 
@@ -123,7 +178,7 @@ export default function AdminDashboard() {
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
             required
-            rows={6}
+            rows={8}
             className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
           />
 
@@ -155,7 +210,9 @@ export default function AdminDashboard() {
               >
                 <div>
                   <p className="text-sm font-semibold text-[#14213d]">{article.title}</p>
-                  <p className="text-xs text-[#7b8794] mt-0.5">{article.category}</p>
+                  <p className="text-xs text-[#7b8794] mt-0.5">
+                    {article.category} {article.slug ? `· /tutoriais/${article.slug}` : '· sem slug'}
+                  </p>
                 </div>
                 <button
                   onClick={() => handleDelete(article.id)}

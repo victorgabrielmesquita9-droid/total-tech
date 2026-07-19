@@ -1,13 +1,141 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: #07070a;
+  --bg-panel: #101014;
+  --ink: #f4f3ef;
+  --ink-muted: #8d8f97;
+  --border: rgba(255, 255, 255, 0.1);
+  --glow-a: #7c5cff;
+  --glow-b: #22d3ee;
+  --glow-c: #ff6f91;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+
 body {
   font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
 }
 
 .font-display {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Fraunces', serif;
+  font-optical-sizing: auto;
+}
+
+/* textura de grão sutil, dá o acabamento "cinematográfico" */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* cursor customizado (desktop only, ver CustomCursor.js) */
+html.has-custom-cursor,
+html.has-custom-cursor a,
+html.has-custom-cursor button {
+  cursor: none;
+}
+
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+  will-change: transform;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background: var(--ink);
+}
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid rgba(244, 243, 239, 0.4);
+  transition: width 0.25s ease, height 0.25s ease, margin 0.25s ease,
+    border-color 0.25s ease, background-color 0.25s ease;
+}
+.cursor-ring.cursor-hover {
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  background: rgba(124, 92, 255, 0.15);
+  border-color: var(--glow-a);
+}
+
+/* revelação no scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* texto cinético (montagem palavra por palavra) */
+.kinetic-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(60%) rotate(4deg);
+  animation: kinetic-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes kinetic-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@media (pointer: coarse) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+  html.has-custom-cursor {
+    cursor: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .kinetic-word {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+  html.has-custom-cursor {
+    cursor: auto;
+  }
 }

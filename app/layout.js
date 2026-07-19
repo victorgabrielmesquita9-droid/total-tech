@@ -1,4 +1,5 @@
 import './globals.css';
+import CustomCursor from '@/components/CustomCursor';
 
 export const metadata = {
   title: 'tutoriais.dev',
@@ -8,7 +9,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <div className="grain" />
+        <CustomCursor />
+        {children}
+      </body>
     </html>
   );
 }
