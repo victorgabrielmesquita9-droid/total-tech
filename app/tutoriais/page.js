@@ -5,6 +5,7 @@ import { tempoDeLeitura } from '@/lib/formato';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
+import TiltCard from '@/components/TiltCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,21 +97,23 @@ export default async function Tutoriais({ searchParams }) {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {artigos.map((artigo, i) => (
               <Reveal key={artigo.id} delay={(i % 3) * 70}>
-                <Link
-                  href={`/tutoriais/${artigo.slug}`}
-                  className="group block h-full bg-[#101014] border border-[rgba(255,255,255,0.08)] rounded-2xl p-6 hover:border-[#7c5cff] transition-colors"
-                >
-                  <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-[#7c5cff] mb-3">
-                    {labelDaCategoria(artigo.category)}
-                  </span>
-                  <h2 className="font-display text-lg text-[#f4f3ef] mb-2 leading-snug group-hover:text-[#22d3ee] transition-colors">
-                    {artigo.title}
-                  </h2>
-                  <p className="text-sm text-[#8d8f97] leading-relaxed mb-4">
-                    {resumo(artigo.content)}
-                  </p>
-                  <p className="text-[12px] text-[#5c5e66]">{tempoDeLeitura(artigo.content)}</p>
-                </Link>
+                <TiltCard>
+                  <Link
+                    href={`/tutoriais/${artigo.slug}`}
+                    className="group block h-full bg-[#101014] border border-[rgba(255,255,255,0.08)] rounded-2xl p-6 hover:border-[#7c5cff] transition-colors"
+                  >
+                    <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-[#7c5cff] mb-3">
+                      {labelDaCategoria(artigo.category)}
+                    </span>
+                    <h2 className="font-display text-lg text-[#f4f3ef] mb-2 leading-snug group-hover:text-[#22d3ee] transition-colors">
+                      {artigo.title}
+                    </h2>
+                    <p className="text-sm text-[#8d8f97] leading-relaxed mb-4">
+                      {resumo(artigo.content)}
+                    </p>
+                    <p className="text-[12px] text-[#5c5e66]">{tempoDeLeitura(artigo.content)}</p>
+                  </Link>
+                </TiltCard>
               </Reveal>
             ))}
           </div>

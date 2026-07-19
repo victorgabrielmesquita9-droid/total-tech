@@ -11,6 +11,8 @@ import MagneticButton from '@/components/MagneticButton';
 import Reveal from '@/components/Reveal';
 import OpenLaptop from '@/components/OpenLaptop';
 import PCBuilder from '@/components/PCBuilder';
+import PCConfigurator from '@/components/PCConfigurator';
+import TiltCard from '@/components/TiltCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,20 +101,22 @@ export default async function Home() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {categorias.map((c, i) => (
               <Reveal key={c.slug} delay={i * 70}>
-                <Link
-                  href={`/tutoriais?categoria=${c.slug}`}
-                  className="group relative block h-40 rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]"
-                >
-                  <img
-                    src={c.imagem}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/30 to-transparent" />
-                  <span className="absolute bottom-3 left-4 font-display text-[#f4f3ef] text-base">
-                    {c.label}
-                  </span>
-                </Link>
+                <TiltCard>
+                  <Link
+                    href={`/tutoriais?categoria=${c.slug}`}
+                    className="group relative block h-40 rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]"
+                  >
+                    <img
+                      src={c.imagem}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/30 to-transparent" />
+                    <span className="absolute bottom-3 left-4 font-display text-[#f4f3ef] text-base">
+                      {c.label}
+                    </span>
+                  </Link>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
@@ -144,6 +148,20 @@ export default async function Home() {
           </Reveal>
         </section>
 
+        <section className="border-y border-[rgba(255,255,255,0.08)] py-20">
+          <Reveal className="max-w-lg mx-auto px-6 text-center block mb-10">
+            <h2 className="font-display font-semibold text-2xl text-[#f4f3ef] mb-2">
+              Monte seu PC personalizado
+            </h2>
+            <p className="text-sm text-[#8d8f97]">
+              Escolha cada peça e veja o preço estimado da sua montagem.
+            </p>
+          </Reveal>
+          <Reveal className="block px-6">
+            <PCConfigurator />
+          </Reveal>
+        </section>
+
         <section className="max-w-5xl mx-auto px-6 py-20">
           <Reveal>
             <h2 className="font-display font-semibold text-2xl text-[#f4f3ef] mb-8">
@@ -159,23 +177,25 @@ export default async function Home() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {artigos.map((artigo, i) => (
                 <Reveal key={artigo.id} delay={(i % 3) * 80}>
-                  <Link
-                    href={`/tutoriais/${artigo.slug}`}
-                    className="group block h-full bg-[#101014] border border-[rgba(255,255,255,0.08)] rounded-2xl p-6 hover:border-[#7c5cff] transition-colors"
-                  >
-                    <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-[#7c5cff] mb-3">
-                      {labelDaCategoria(artigo.category)}
-                    </span>
-                    <h3 className="font-display text-lg text-[#f4f3ef] mb-2 leading-snug group-hover:text-[#22d3ee] transition-colors">
-                      {artigo.title}
-                    </h3>
-                    <p className="text-sm text-[#8d8f97] leading-relaxed mb-4">
-                      {resumo(artigo.content)}
-                    </p>
-                    <p className="text-[12px] text-[#5c5e66]">
-                      {formatarData(artigo.created_at)} · {tempoDeLeitura(artigo.content)}
-                    </p>
-                  </Link>
+                  <TiltCard>
+                    <Link
+                      href={`/tutoriais/${artigo.slug}`}
+                      className="group block h-full bg-[#101014] border border-[rgba(255,255,255,0.08)] rounded-2xl p-6 hover:border-[#7c5cff] transition-colors"
+                    >
+                      <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-[#7c5cff] mb-3">
+                        {labelDaCategoria(artigo.category)}
+                      </span>
+                      <h3 className="font-display text-lg text-[#f4f3ef] mb-2 leading-snug group-hover:text-[#22d3ee] transition-colors">
+                        {artigo.title}
+                      </h3>
+                      <p className="text-sm text-[#8d8f97] leading-relaxed mb-4">
+                        {resumo(artigo.content)}
+                      </p>
+                      <p className="text-[12px] text-[#5c5e66]">
+                        {formatarData(artigo.created_at)} · {tempoDeLeitura(artigo.content)}
+                      </p>
+                    </Link>
+                  </TiltCard>
                 </Reveal>
               ))}
             </div>
