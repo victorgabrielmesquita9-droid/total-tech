@@ -3,8 +3,8 @@ import { categorias } from '@/lib/categorias';
 
 export default function Header() {
   return (
-    <header className="relative z-10">
-      <div className="max-w-5xl mx-auto px-6 pt-8 pb-6 flex items-center justify-between flex-wrap gap-4">
+    <header className="relative z-20">
+      <div className="max-w-6xl mx-auto px-6 pt-8 pb-6 flex items-center justify-between flex-wrap gap-4">
         <Link href="/" className="font-display font-semibold text-xl text-[#f4f3ef] tracking-tight">
           tutoriais<span className="text-[#7c5cff]">.</span>dev
         </Link>
@@ -19,6 +19,12 @@ export default function Header() {
             </Link>
           ))}
         </nav>
+        <Link
+          href="/tutoriais"
+          className="text-[13px] font-semibold text-white bg-[#7c5cff] hover:bg-[#6b4ce6] rounded-full px-5 py-2.5 transition-colors"
+        >
+          Ver tutoriais
+        </Link>
       </div>
     </header>
   );
