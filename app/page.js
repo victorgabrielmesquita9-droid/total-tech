@@ -157,7 +157,7 @@ export default async function Home() {
               Escolha cada peça e veja o preço estimado da sua montagem.
             </p>
           </Reveal>
-          <Reveal className="block px-6">
+          <Reveal className="block px-6 max-w-4xl mx-auto">
             <PCConfigurator />
           </Reveal>
         </section>

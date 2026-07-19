@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import TiltCard from '@/components/TiltCard';
 
 const PARTES = [
   {
@@ -49,55 +50,57 @@ export default function OpenLaptop() {
 
   return (
     <div className="max-w-md mx-auto flex flex-col items-center">
-      <div
-        className="relative w-full rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]"
-        style={{ aspectRatio: '4 / 3' }}
-      >
-        <button
-          type="button"
-          onClick={toggleAberto}
-          aria-pressed={open}
-          aria-label={open ? 'Fechar o notebook' : 'Abrir o notebook'}
-          className="absolute inset-0 z-10"
+      <TiltCard className="w-full">
+        <div
+          className="relative w-full rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]"
+          style={{ aspectRatio: '4 / 3' }}
         >
-          <img
-            src="https://images.pexels.com/photos/13073600/pexels-photo-13073600.jpeg"
-            alt="Notebook fechado"
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-            style={{ opacity: open ? 0 : 1 }}
-          />
-          <img
-            src="https://images.pexels.com/photos/6424589/pexels-photo-6424589.jpeg"
-            alt="Notebook aberto, mostrando código na tela"
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-            style={{ opacity: open ? 1 : 0 }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-        </button>
+          <button
+            type="button"
+            onClick={toggleAberto}
+            aria-pressed={open}
+            aria-label={open ? 'Fechar o notebook' : 'Abrir o notebook'}
+            className="absolute inset-0 z-10"
+          >
+            <img
+              src="https://images.pexels.com/photos/13073600/pexels-photo-13073600.jpeg"
+              alt="Notebook fechado"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+              style={{ opacity: open ? 0 : 1 }}
+            />
+            <img
+              src="https://images.pexels.com/photos/6424589/pexels-photo-6424589.jpeg"
+              alt="Notebook aberto, mostrando código na tela"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+              style={{ opacity: open ? 1 : 0 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          </button>
 
-        {open &&
-          PARTES.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setAtivo(p.id === ativo ? null : p.id)}
-              aria-label={p.label}
-              aria-pressed={ativo === p.id}
-              style={{ left: `${p.x}%`, top: `${p.y}%` }}
-              className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center"
-            >
-              <span
-                className={`absolute inset-0 rounded-full bg-[#7c5cff] ${
-                  ativo === p.id ? 'opacity-30' : 'opacity-25 animate-ping'
-                }`}
-              />
-              <span
-                className={`relative w-3 h-3 rounded-full border-2 border-white transition-colors ${
-                  ativo === p.id ? 'bg-[#7c5cff]' : 'bg-[#22d3ee]'
-                }`}
-              />
-            </button>
-          ))}
-      </div>
+          {open &&
+            PARTES.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setAtivo(p.id === ativo ? null : p.id)}
+                aria-label={p.label}
+                aria-pressed={ativo === p.id}
+                style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center"
+              >
+                <span
+                  className={`absolute inset-0 rounded-full bg-[#7c5cff] ${
+                    ativo === p.id ? 'opacity-30' : 'opacity-25 animate-ping'
+                  }`}
+                />
+                <span
+                  className={`relative w-3 h-3 rounded-full border-2 border-white transition-colors ${
+                    ativo === p.id ? 'bg-[#7c5cff]' : 'bg-[#22d3ee]'
+                  }`}
+                />
+              </button>
+            ))}
+        </div>
+      </TiltCard>
 
       <p className="text-[13px] text-[#5c5e66] mt-6">
         {open ? 'Clique na foto pra fechar' : 'Clique na foto pra abrir'}
