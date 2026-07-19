@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import TiltCard from '@/components/TiltCard';
 
 const PECAS = [
   {
@@ -43,35 +44,37 @@ export default function PCBuilder() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="relative w-full rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
-        <img
-          src="https://images.pexels.com/photos/18338405/pexels-photo-18338405.jpeg"
-          alt="Processador montado em uma placa-mãe"
-          className="w-full h-auto block"
-        />
+      <TiltCard>
+        <div className="relative w-full rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
+          <img
+            src="https://images.pexels.com/photos/18338405/pexels-photo-18338405.jpeg"
+            alt="Processador montado em uma placa-mãe"
+            className="w-full h-auto block"
+          />
 
-        {PECAS.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setAtivo(p.id === ativo ? null : p.id)}
-            aria-label={p.label}
-            aria-pressed={ativo === p.id}
-            style={{ left: `${p.x}%`, top: `${p.y}%` }}
-            className="absolute -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center"
-          >
-            <span
-              className={`absolute inset-0 rounded-full bg-[#7c5cff] ${
-                ativo === p.id ? 'opacity-30' : 'opacity-25 animate-ping'
-              }`}
-            />
-            <span
-              className={`relative w-3 h-3 rounded-full border-2 border-white transition-colors ${
-                ativo === p.id ? 'bg-[#7c5cff]' : 'bg-[#22d3ee]'
-              }`}
-            />
-          </button>
-        ))}
-      </div>
+          {PECAS.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setAtivo(p.id === ativo ? null : p.id)}
+              aria-label={p.label}
+              aria-pressed={ativo === p.id}
+              style={{ left: `${p.x}%`, top: `${p.y}%` }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center"
+            >
+              <span
+                className={`absolute inset-0 rounded-full bg-[#7c5cff] ${
+                  ativo === p.id ? 'opacity-30' : 'opacity-25 animate-ping'
+                }`}
+              />
+              <span
+                className={`relative w-3 h-3 rounded-full border-2 border-white transition-colors ${
+                  ativo === p.id ? 'bg-[#7c5cff]' : 'bg-[#22d3ee]'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      </TiltCard>
 
       <div className="min-h-[92px] mt-6 bg-[#101014] border border-[rgba(255,255,255,0.08)] rounded-xl p-5">
         {peca ? (
