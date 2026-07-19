@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import TiltCard from '@/components/TiltCard';
+import { useRef, useState } from 'react';
 
 const PARTES = [
   {
@@ -43,45 +42,94 @@ export default function OpenLaptop() {
   const [ativo, setAtivo] = useState(null);
   const parte = PARTES.find((p) => p.id === ativo);
 
+  const wrapRef = useRef(null);
+  const drag = useRef({ startX: 0, dragging: false, moved: false });
+
   function toggleAberto() {
     setOpen((o) => !o);
     setAtivo(null);
   }
 
+  function onPointerDown(e) {
+    drag.current = { startX: e.clientX, dragging: true, moved: false };
+    if (wrapRef.current) wrapRef.current.style.transition = 'none';
+  }
+
+  function onPointerMove(e) {
+    if (!drag.current.dragging) return;
+    const dx = e.clientX - drag.current.startX;
+    if (Math.abs(dx) > 4) drag.current.moved = true;
+    const rotateY = Math.max(-22, Math.min(22, dx * 0.15));
+    if (wrapRef.current) {
+      wrapRef.current.style.transform = `rotateY(${rotateY}deg)`;
+    }
+  }
+
+  function onPointerUp() {
+    if (!drag.current.dragging) return;
+    const wasDrag = drag.current.moved;
+    drag.current.dragging = false;
+    if (wrapRef.current) {
+      wrapRef.current.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+      wrapRef.current.style.transform = 'rotateY(0deg)';
+    }
+    if (!wasDrag) toggleAberto();
+  }
+
+  function pararPropagacao(e) {
+    e.stopPropagation();
+  }
+
   return (
     <div className="max-w-md mx-auto flex flex-col items-center">
-      <TiltCard className="w-full">
+      <div className="relative w-full" style={{ perspective: '1000px' }}>
         <div
-          className="relative w-full rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]"
-          style={{ aspectRatio: '4 / 3' }}
+          ref={wrapRef}
+          role="button"
+          tabIndex={0}
+          aria-pressed={open}
+          aria-label={open ? 'Fechar o notebook' : 'Abrir o notebook — arraste pra girar'}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') toggleAberto();
+          }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerUp}
+          className="relative w-full cursor-grab active:cursor-grabbing select-none"
+          style={{
+            aspectRatio: '4 / 3',
+            touchAction: 'pan-y',
+            maskImage:
+              'radial-gradient(ellipse 76% 76% at 50% 50%, black 55%, transparent 94%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 76% 76% at 50% 50%, black 55%, transparent 94%)',
+          }}
         >
-          <button
-            type="button"
-            onClick={toggleAberto}
-            aria-pressed={open}
-            aria-label={open ? 'Fechar o notebook' : 'Abrir o notebook'}
-            className="absolute inset-0 z-10"
-          >
-            <img
-              src="https://images.pexels.com/photos/13073600/pexels-photo-13073600.jpeg"
-              alt="Notebook fechado"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-              style={{ opacity: open ? 0 : 1 }}
-            />
-            <img
-              src="https://images.pexels.com/photos/6424589/pexels-photo-6424589.jpeg"
-              alt="Notebook aberto, mostrando código na tela"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-              style={{ opacity: open ? 1 : 0 }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          </button>
+          <img
+            src="https://images.pexels.com/photos/13073600/pexels-photo-13073600.jpeg"
+            alt="Notebook fechado"
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover rounded-2xl transition-opacity duration-700"
+            style={{ opacity: open ? 0 : 1 }}
+          />
+          <img
+            src="https://images.pexels.com/photos/6424589/pexels-photo-6424589.jpeg"
+            alt="Notebook aberto, mostrando código na tela"
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover rounded-2xl transition-opacity duration-700"
+            style={{ opacity: open ? 1 : 0 }}
+          />
 
           {open &&
             PARTES.map((p) => (
               <button
                 key={p.id}
-                onClick={() => setAtivo(p.id === ativo ? null : p.id)}
+                onPointerDown={pararPropagacao}
+                onClick={(e) => {
+                  pararPropagacao(e);
+                  setAtivo(p.id === ativo ? null : p.id);
+                }}
                 aria-label={p.label}
                 aria-pressed={ativo === p.id}
                 style={{ left: `${p.x}%`, top: `${p.y}%` }}
@@ -100,10 +148,14 @@ export default function OpenLaptop() {
               </button>
             ))}
         </div>
-      </TiltCard>
+
+        <span className="absolute top-1/2 right-2 -translate-y-1/2 text-[12px] text-[#f4f3ef] bg-white/10 backdrop-blur px-4 py-2 rounded-full border border-white/10 pointer-events-none">
+          Arraste pra girar
+        </span>
+      </div>
 
       <p className="text-[13px] text-[#5c5e66] mt-6">
-        {open ? 'Clique na foto pra fechar' : 'Clique na foto pra abrir'}
+        {open ? 'Clique pra fechar' : 'Clique pra abrir'}
       </p>
 
       {open && (
