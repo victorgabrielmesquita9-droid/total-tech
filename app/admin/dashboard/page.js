@@ -2,228 +2,220 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
-import { categorias } from '@/lib/categorias';
-import { gerarSlug } from '@/lib/slugify';
+import { CATEGORY_LIST } from '@/lib/categories';
 
-export default function AdminDashboard() {
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+const emptyForm = {
+  title: '',
+  category: CATEGORY_LIST[0].slug,
+  excerpt: '',
+  content: '',
+  published: true,
+};
+
+export default function AdminDashboardPage() {
   const router = useRouter();
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [checking, setChecking] = useState(true);
   const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    title: '',
-    category: categorias[0].slug,
-    content: '',
-    slug: '',
-    image_url: '',
-  });
-  const [slugEditadoManualmente, setSlugEditadoManualmente] = useState(false);
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
         router.push('/admin/login');
         return;
       }
-      setCheckingAuth(false);
+      setChecking(false);
       loadArticles();
-    }
-    checkAuth();
-  }, []);
+    });
+  }, [router]);
 
   async function loadArticles() {
-    setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('articles')
-      .select('*')
+      .select('id, title, category, slug, published, created_at')
       .order('created_at', { ascending: false });
-
-    if (!error) setArticles(data);
-    setLoading(false);
+    setArticles(data || []);
   }
 
-  function handleTitleChange(value) {
-    setForm((f) => ({
-      ...f,
-      title: value,
-      slug: slugEditadoManualmente ? f.slug : gerarSlug(value),
-    }));
-  }
-
-  async function handleCreate(e) {
-    e.preventDefault();
-    if (!form.title.trim() || !form.content.trim() || !form.slug.trim()) return;
-
-    setSaving(true);
-    setErrorMsg('');
-
-    const { error } = await supabase.from('articles').insert({
-      title: form.title.trim(),
-      category: form.category,
-      content: form.content.trim(),
-      slug: form.slug.trim(),
-      image_url: form.image_url.trim() || null,
-    });
-
-    setSaving(false);
-
-    if (error) {
-      setErrorMsg(
-        error.code === '23505'
-          ? 'Já existe um artigo com esse endereço (slug). Mude o título ou o slug.'
-          : 'Não foi possível publicar. Tente novamente.'
-      );
-      return;
-    }
-
-    setForm({ title: '', category: categorias[0].slug, content: '', slug: '', image_url: '' });
-    setSlugEditadoManualmente(false);
-    loadArticles();
-  }
-
-  async function handleDelete(id) {
-    if (!confirm('Excluir este artigo?')) return;
-    await supabase.from('articles').delete().eq('id', id);
-    loadArticles();
-  }
-
-  async function handleLogout() {
+  async function handleSignOut() {
     await supabase.auth.signOut();
     router.push('/admin/login');
   }
 
-  if (checkingAuth) {
+  async function handleCreate(e) {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+
+    const { error: insertError } = await supabase.from('articles').insert({
+      title: form.title,
+      category: form.category,
+      excerpt: form.excerpt || null,
+      content: form.content,
+      slug: slugify(form.title),
+      published: form.published,
+    });
+
+    setSaving(false);
+
+    if (insertError) {
+      setError(
+        insertError.code === '23505'
+          ? 'já existe um tutorial com esse título/slug.'
+          : 'algo deu errado ao salvar.'
+      );
+      return;
+    }
+
+    setForm(emptyForm);
+    loadArticles();
+  }
+
+  async function handleDelete(id) {
+    if (!confirm('excluir este tutorial? essa ação não pode ser desfeita.')) return;
+    await supabase.from('articles').delete().eq('id', id);
+    loadArticles();
+  }
+
+  if (checking) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#eef4fb]">
-        <p className="text-sm text-[#7b8794]">Carregando...</p>
+      <main className="min-h-screen dot-grid flex items-center justify-center">
+        <p className="font-mono text-sm text-muted">carregando…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#eef4fb] px-6 py-10">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display font-black text-2xl text-[#14213d]">Painel admin</h1>
+    <main className="min-h-screen dot-grid">
+      <header className="border-b border-line">
+        <div className="mx-auto max-w-5xl px-6 py-5 flex items-center justify-between">
+          <Link href="/" className="font-mono text-sm font-bold tracking-tight text-text">
+            tutoriais<span className="text-mint">.dev</span>{' '}
+            <span className="text-muted font-normal">/ admin</span>
+          </Link>
           <button
-            onClick={handleLogout}
-            className="text-sm text-[#7b8794] underline hover:text-[#14213d]"
+            onClick={handleSignOut}
+            className="font-mono text-xs text-muted hover:text-coral transition-colors"
           >
-            Sair
+            sair
           </button>
         </div>
+      </header>
 
-        <form
-          onSubmit={handleCreate}
-          className="bg-white rounded-xl border border-[#e1e7ee] p-6 mb-8"
-        >
-          <h2 className="text-sm font-semibold text-[#14213d] mb-4">Novo artigo</h2>
+      <div className="mx-auto max-w-5xl px-6 py-10 grid lg:grid-cols-[1fr_1.2fr] gap-8">
+        {/* list */}
+        <section>
+          <h2 className="font-mono text-sm text-muted mb-4">{'// artigos publicados'}</h2>
+          {articles.length === 0 ? (
+            <p className="font-mono text-sm text-muted">nenhum artigo ainda.</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-line rounded-lg border border-line overflow-hidden">
+              {articles.map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3 bg-surface">
+                  <div className="min-w-0">
+                    <p className="text-sm text-text truncate">{a.title}</p>
+                    <p className="font-mono text-[11px] text-muted">
+                      {a.category} · {a.published ? 'publicado' : 'rascunho'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(a.id)}
+                    className="font-mono text-xs text-coral hover:underline shrink-0"
+                  >
+                    excluir
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-          <label className="block text-xs font-medium text-[#4b5563] mb-1">Título</label>
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            required
-            className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
-          />
-
-          <label className="block text-xs font-medium text-[#4b5563] mb-1">
-            Endereço do artigo (slug)
-          </label>
-          <input
-            type="text"
-            value={form.slug}
-            onChange={(e) => {
-              setSlugEditadoManualmente(true);
-              setForm({ ...form, slug: e.target.value });
-            }}
-            required
-            className="w-full mb-1 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1] font-mono"
-          />
-          <p className="text-xs text-[#9aa4b0] mb-4">
-            /tutoriais/{form.slug || 'exemplo-de-slug'}
-          </p>
-
-          <label className="block text-xs font-medium text-[#4b5563] mb-1">Categoria</label>
-          <select
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1] bg-white"
+        {/* create form */}
+        <section>
+          <h2 className="font-mono text-sm text-muted mb-4">{'// novo tutorial'}</h2>
+          <form
+            onSubmit={handleCreate}
+            className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-5"
           >
-            {categorias.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-muted">título</span>
+              <input
+                required
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="bg-ink border border-line rounded px-3 py-2 text-sm text-text outline-none focus:border-mint/60 transition-colors"
+              />
+            </label>
 
-          <label className="block text-xs font-medium text-[#4b5563] mb-1">
-            Imagem de capa (URL, opcional)
-          </label>
-          <input
-            type="text"
-            value={form.image_url}
-            onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-            placeholder="https://..."
-            className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
-          />
-
-          <label className="block text-xs font-medium text-[#4b5563] mb-1">Conteúdo</label>
-          <textarea
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-            required
-            rows={8}
-            className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
-          />
-
-          {errorMsg && <p className="text-sm text-red-500 mb-4">{errorMsg}</p>}
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="py-2.5 px-5 rounded-lg bg-[#14213d] text-white text-sm font-semibold hover:bg-[#1d2c50] disabled:opacity-60"
-          >
-            {saving ? 'Publicando...' : 'Publicar'}
-          </button>
-        </form>
-
-        <h2 className="text-sm font-semibold text-[#14213d] mb-3">
-          Artigos publicados {!loading && `(${articles.length})`}
-        </h2>
-
-        {loading ? (
-          <p className="text-sm text-[#7b8794]">Carregando artigos...</p>
-        ) : articles.length === 0 ? (
-          <p className="text-sm text-[#7b8794]">Nenhum artigo publicado ainda.</p>
-        ) : (
-          <ul className="space-y-3">
-            {articles.map((article) => (
-              <li
-                key={article.id}
-                className="bg-white rounded-xl border border-[#e1e7ee] p-4 flex items-start justify-between gap-4"
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-muted">categoria</span>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="bg-ink border border-line rounded px-3 py-2 text-sm text-text outline-none focus:border-mint/60 transition-colors"
               >
-                <div>
-                  <p className="text-sm font-semibold text-[#14213d]">{article.title}</p>
-                  <p className="text-xs text-[#7b8794] mt-0.5">
-                    {article.category} {article.slug ? `· /tutoriais/${article.slug}` : '· sem slug'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleDelete(article.id)}
-                  className="text-xs text-red-500 hover:underline shrink-0"
-                >
-                  Excluir
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+                {CATEGORY_LIST.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-muted">resumo (opcional)</span>
+              <input
+                value={form.excerpt}
+                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                className="bg-ink border border-line rounded px-3 py-2 text-sm text-text outline-none focus:border-mint/60 transition-colors"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-muted">conteúdo</span>
+              <textarea
+                required
+                rows={8}
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                className="bg-ink border border-line rounded px-3 py-2 text-sm text-text outline-none focus:border-mint/60 transition-colors resize-y"
+              />
+            </label>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.published}
+                onChange={(e) => setForm({ ...form, published: e.target.checked })}
+                className="accent-mint"
+              />
+              <span className="font-mono text-xs text-muted">publicar imediatamente</span>
+            </label>
+
+            {error && <p className="font-mono text-xs text-coral">{'> erro: '}{error}</p>}
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-mint text-ink font-mono text-sm font-medium rounded px-4 py-2.5 hover:bg-mint/90 transition-colors disabled:opacity-60"
+            >
+              {saving ? 'salvando…' : 'salvar tutorial'}
+            </button>
+          </form>
+        </section>
       </div>
     </main>
   );

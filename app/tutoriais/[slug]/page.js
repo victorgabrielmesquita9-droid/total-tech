@@ -1,60 +1,54 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { labelDaCategoria } from '@/lib/categorias';
-import { tempoDeLeitura, formatarData } from '@/lib/formato';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import Reveal from '@/components/Reveal';
+import { CATEGORIES } from '@/lib/categories';
+import SiteHeader from '@/components/SiteHeader';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export default async function Tutorial({ params }) {
-  const { data: artigo } = await supabase
+async function getArticle(slug) {
+  const { data, error } = await supabase
     .from('articles')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
+    .eq('published', true)
     .single();
 
-  if (!artigo) notFound();
+  if (error || !data) return null;
+  return data;
+}
+
+export default async function ArticlePage({ params }) {
+  const article = await getArticle(params.slug);
+  if (!article) notFound();
+
+  const cat = CATEGORIES[article.category];
 
   return (
-    <div className="min-h-screen bg-[#07070a] flex flex-col">
-      <Header />
-
-      <main className="flex-1 max-w-2xl mx-auto w-full px-6 pt-8 pb-20">
-        <Link href="/tutoriais" className="text-[13px] text-[#5c5e66] hover:text-[#f4f3ef]">
-          ← Todos os tutoriais
+    <main className="min-h-screen dot-grid">
+      <SiteHeader />
+      <article className="mx-auto max-w-2xl px-6 py-12">
+        <Link
+          href={`/tutoriais?categoria=${article.category}`}
+          className="font-mono text-xs px-2 py-0.5 rounded inline-block mb-4"
+          style={{ background: `${cat?.color}1a`, color: cat?.color }}
+        >
+          {cat?.label}
         </Link>
-
-        <Reveal>
-          <span className="block mt-6 text-[13px] uppercase tracking-wider text-[#7c5cff] font-medium">
-            {labelDaCategoria(artigo.category)}
-          </span>
-
-          <h1 className="font-display font-semibold text-4xl text-[#f4f3ef] mt-3 mb-4 leading-[1.1]">
-            {artigo.title}
-          </h1>
-
-          <p className="text-[13px] text-[#5c5e66] mb-10">
-            {formatarData(artigo.created_at)} · {tempoDeLeitura(artigo.content)}
-          </p>
-
-          {artigo.image_url && (
-            <img
-              src={artigo.image_url}
-              alt={artigo.title}
-              className="w-full rounded-xl mb-10 border border-[rgba(255,255,255,0.08)]"
-            />
-          )}
-
-          <div className="text-[#c7c8cd] text-[17px] leading-[1.85] whitespace-pre-wrap">
-            {artigo.content}
-          </div>
-        </Reveal>
-      </main>
-
-      <Footer />
-    </div>
+        <h1 className="font-mono text-2xl sm:text-3xl font-bold text-text leading-tight mb-3">
+          {article.title}
+        </h1>
+        <p className="font-mono text-xs text-muted mb-10">
+          {new Date(article.created_at).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          })}
+        </p>
+        <div className="prose-content text-[15px] leading-7 text-text/90 whitespace-pre-wrap">
+          {article.content}
+        </div>
+      </article>
+    </main>
   );
 }

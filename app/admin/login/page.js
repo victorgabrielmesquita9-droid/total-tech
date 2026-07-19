@@ -2,26 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function AdminLogin() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setStatus('loading');
+    setErrorMsg('');
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    setLoading(false);
-
     if (error) {
-      setError('E-mail ou senha inválidos.');
+      setStatus('error');
+      setErrorMsg('e-mail ou senha incorretos.');
       return;
     }
 
@@ -29,42 +29,61 @@ export default function AdminLogin() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#eef4fb] px-6">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-[#e1e7ee] p-8"
-      >
-        <h1 className="font-display font-black text-2xl text-[#14213d] mb-1">Admin</h1>
-        <p className="text-sm text-[#7b8794] mb-6">Entre para gerenciar o site.</p>
-
-        <label className="block text-xs font-medium text-[#4b5563] mb-1">E-mail</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full mb-4 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
-        />
-
-        <label className="block text-xs font-medium text-[#4b5563] mb-1">Senha</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full mb-5 py-2.5 px-3 rounded-lg border border-[#e1e7ee] text-sm outline-none focus:border-[#b7c3d1]"
-        />
-
-        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2.5 rounded-lg bg-[#14213d] text-white text-sm font-semibold hover:bg-[#1d2c50] disabled:opacity-60"
+    <main className="min-h-screen dot-grid flex items-center justify-center px-6">
+      <div className="w-full max-w-sm">
+        <Link
+          href="/"
+          className="font-mono text-sm font-bold tracking-tight text-text mb-8 block text-center"
         >
-          {loading ? 'Entrando...' : 'Entrar'}
-        </button>
-      </form>
+          tutoriais<span className="text-mint">.dev</span>
+        </Link>
+
+        <div className="rounded-lg border border-line bg-surface overflow-hidden">
+          <div className="flex items-center gap-1.5 px-4 py-3 border-b border-line bg-surface2/60">
+            <span className="h-2.5 w-2.5 rounded-full bg-coral/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-amber/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-mint/70" />
+            <span className="ml-3 text-xs text-muted font-mono">admin/login.sh</span>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-muted">e-mail</span>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-ink border border-line rounded px-3 py-2 text-sm text-text outline-none focus:border-mint/60 transition-colors font-mono"
+                placeholder="voce@email.com"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-muted">senha</span>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-ink border border-line rounded px-3 py-2 text-sm text-text outline-none focus:border-mint/60 transition-colors font-mono"
+                placeholder="••••••••"
+              />
+            </label>
+
+            {status === 'error' && (
+              <p className="font-mono text-xs text-coral">{'> erro: '}{errorMsg}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="mt-2 bg-mint text-ink font-mono text-sm font-medium rounded px-4 py-2.5 hover:bg-mint/90 transition-colors disabled:opacity-60"
+            >
+              {status === 'loading' ? 'entrando…' : 'entrar'}
+            </button>
+          </form>
+        </div>
+      </div>
     </main>
   );
 }
